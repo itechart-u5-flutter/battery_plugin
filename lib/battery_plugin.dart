@@ -13,4 +13,13 @@ class BatteryPlugin {
       throw Exception('Failed to get platform version.');
     }
   }
+
+  static Future<String?> get getCurrentLocation async {
+    try {
+      _channel.invokeMethod('getCurrentLocation');
+      return 'location';
+    } on PlatformException {
+      throw Exception('Failed to get currentLocation');
+    }
+  }
 }

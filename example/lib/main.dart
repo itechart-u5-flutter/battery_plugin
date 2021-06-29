@@ -11,9 +11,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String? currentLocation;
+
   @override
   void initState() {
+    getCurrentLocation();
     super.initState();
+  }
+
+  Future<void> getCurrentLocation() async {
+    try {
+      final result = await BatteryPlugin.getCurrentLocation;
+      print(result);
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -23,19 +35,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: FutureBuilder(
-            future: BatteryPlugin.platformVersion,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final version = snapshot.data;
-                return Text('Running on: $version\n');
-              } else {
-                return Text('Error...');
-              }
-            },
-          ),
-        ),
+        body: Center(child: Text('Current location ...')),
       ),
     );
   }
