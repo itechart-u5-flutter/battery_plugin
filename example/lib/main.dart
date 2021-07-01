@@ -21,8 +21,8 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> getCurrentLocation() async {
     try {
-      final result = await BatteryPlugin.getCurrentLocation;
-      print(result);
+      currentLocation = await BatteryPlugin.getCurrentLocation();
+      setState(() {});
     } catch (e) {
       print(e);
     }
@@ -35,7 +35,8 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(child: Text('Current location ...')),
+        body: Center(
+            child: Text('Current location is ${currentLocation ?? "..."}')),
       ),
     );
   }
