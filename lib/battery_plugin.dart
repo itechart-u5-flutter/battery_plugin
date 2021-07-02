@@ -10,7 +10,7 @@ class BatteryPlugin {
       final String? version = await _channel.invokeMethod('getPlatformVersion');
       return version;
     } on PlatformException {
-      throw Exception('Failed to get platform version.');
+      throw Exception('Failed to get platform version!');
     }
   }
 
