@@ -5,8 +5,7 @@ import CoreLocation
 public class SwiftBatteryPlugin: NSObject, FlutterPlugin {
     var locationManager = CLLocationManager()
     var currenLocationLat: String?
-    
-    
+    var resultClosure: FlutterResult?
     
     var channel :FlutterMethodChannel
     
@@ -22,28 +21,27 @@ public class SwiftBatteryPlugin: NSObject, FlutterPlugin {
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        //        print(call.arguments)
-        //        let args = call.arguments as? NSDictionary
-        //        guard let args = args else {
-        //            return result("Error")
-        //        }
+        
+        locationManager.delegate = self
+        resultClosure = result
         
         switch (call.method) {
         case "getPlatformVersion":
             result("iOS " + UIDevice.current.systemVersion)
         case "askPermissionAndStartLocation":
             print("askPermissionAndStartLocation was called")
-            locationManager.delegate = self
-            locationManager.requestAlwaysAuthorization()
-            locationManager.requestLocation()
-            result("askPermissionAndStartLocation end")
+            if #available(iOS 14.0, *) {
+              let status =  locationManager.authorizationStatus
+                if (status == CLAuthorizationStatus.authorizedWhenInUse || status == CLAuthorizationStatus.authorizedAlways) {
+                    result(true);
+                }
+                locationManager.requestWhenInUseAuthorization()
+            } else {
+                locationManager.requestWhenInUseAuthorization()
+            }
             
         case "getCurrentLocation":
-            print("getCurrentLocation was called")
-            if  let args = call.arguments  {
-                print("args - \(args)")
-                result(args)
-            }
+            locationManager.requestLocation()
         default:
             result("not implemented")
         }
@@ -58,13 +56,11 @@ extension SwiftBatteryPlugin: CLLocationManagerDelegate {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         locations.forEach { (location) in
-            let locationString = "Result didUpdateLocations: \(dateFormatter.string(from: location.timestamp)); \(location.coordinate.latitude), \(location.coordinate.longitude)"
-            let resultLocation: FlutterResult = { (result) in
-                print("let resultLocation: FlutterResult = \(result)")
-                result
-                //                locationString
+            if let result = self.resultClosure {
+                let locationString = "Result didUpdateLocations: \(dateFormatter.string(from: location.timestamp)); \(location.coordinate.latitude), \(location.coordinate.longitude)"
+                result(locationString)
             }
-            self.handle(FlutterMethodCall(methodName: "getCurrentLocation", arguments: locationString), result: resultLocation)
+            
         }
     }
     
@@ -75,6 +71,33 @@ extension SwiftBatteryPlugin: CLLocationManagerDelegate {
             // To prevent forever looping of `didFailWithError` callback
             self.locationManager.stopMonitoringSignificantLocationChanges()
             return
+        }
+    }
+    
+    public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        guard let result = resultClosure else {
+            return
+        }
+        switch status {
+        case .denied: // Setting option: Never
+            print("LocationManager didChangeAuthorization denied")
+           result(false)
+        case .notDetermined: // Setting option: Ask Next Time
+            print("LocationManager didChangeAuthorization notDetermined")
+        case .authorizedWhenInUse: // Setting option: While Using the App
+            print("LocationManager didChangeAuthorization authorizedWhenInUse")
+            result(true)
+           
+        case .authorizedAlways: // Setting option: Always
+            print("LocationManager didChangeAuthorization authorizedAlways")
+            result(true)
+           
+        case .restricted: // Restricted by parental control
+            print("LocationManager didChangeAuthorization restricted")
+            result(false)
+        default:
+            print("LocationManager didChangeAuthorization")
+            result(false)
         }
     }
 }

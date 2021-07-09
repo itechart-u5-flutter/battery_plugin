@@ -21,7 +21,13 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> getCurrentLocation() async {
     try {
-      currentLocation = await BatteryPlugin.getCurrentLocation();
+      final permission = await BatteryPlugin.askPermittion();
+      if (permission != null && permission) {
+        currentLocation = await BatteryPlugin.getCurrentLocation();
+      } else {
+        currentLocation = 'location denied';
+      }
+
       setState(() {});
     } catch (e) {
       print(e);

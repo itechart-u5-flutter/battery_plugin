@@ -16,11 +16,15 @@ class BatteryPlugin {
 
   static Future<String?> getCurrentLocation() async {
     try {
-      final result1 =
-          await _channel.invokeMethod('askPermissionAndStartLocation');
-      print("askPermissionAndStartLocation - $result1");
-      final result2 = await _channel.invokeMethod('getCurrentLocation');
-      print("getCurrentLocation - $result2");
+      return _channel.invokeMethod('getCurrentLocation');
+    } on PlatformException {
+      throw Exception('Failed to get currentLocation');
+    }
+  }
+
+  static Future<bool?> askPermittion() async {
+    try {
+      return _channel.invokeMethod<bool?>('askPermissionAndStartLocation');
     } on PlatformException {
       throw Exception('Failed to get currentLocation');
     }
